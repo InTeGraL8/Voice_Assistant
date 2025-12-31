@@ -1,0 +1,28 @@
+{
+    "assistant": {
+        "system_prompt": "ты голосовой ассистент,отвечай кратко,ответы озвучиваються"
+    },
+    "GigaChat": {
+        "api_key": "ЗДЕСЬ_ВАШ_КЛЮЧ",
+        "token": "",
+        "gigachat_model": "GigaChat-2",
+        "auth_url": "https://ngw.devices.sberbank.ru:9443/api/v2/oauth",
+        "model_url": "https://gigachat.devices.sberbank.ru/api/v1/models",
+        "chat_url": "https://gigachat.devices.sberbank.ru/api/v1/chat/completions",
+        "payload": "GIGACHAT_API_PERS",
+        "max_tokens": 150,
+        "temperature": 0.7,
+        "all_used_tokens": 0
+    },
+    "paths": {
+        "discord": "",
+        "steam": ""
+    },
+    "micro": {
+        "ambient_noise": 0
+    },
+    "browser": {
+        "browser_url": "https://google.com",
+        "music_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1"
+    }
+}
