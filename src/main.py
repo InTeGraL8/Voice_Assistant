@@ -55,14 +55,17 @@ mic = sr.Microphone()
 recognizer.dynamic_energy_threshold=False
 recognizer.pause_threshold = 0.5
 
+is_first_launch = False
+
 if config.get('micro', {}).get('ambient_noise', 0) == 0:
+    is_first_launch = True
     set()
 
 else:
     recognizer.energy_threshold = config['micro']['ambient_noise']
 
-
-print('Говорите, я слушаю')
+if not is_first_launch:
+    print('Говорите, я слушаю')
 speak('Говорите, я слушаю')
 # Основной цикл
 try:
@@ -85,6 +88,8 @@ try:
                 else:
                     if 'ассистент' in text:
                         answer = gigachat.processor(text)
+                        if config['context']['is_enabled'] == True:
+                            pass
                         print(answer)
                         speak(answer)
 

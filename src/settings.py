@@ -1,5 +1,6 @@
 import json
-import os
+import os, sys
+import time
 
 
 class Settings:
@@ -10,6 +11,15 @@ class Settings:
 
 
     def field_checker(self):
+        if 'assistant' not in self.config:
+            self.config['assistant'] = {}
+
+        if 'system_prompt' not in self.config['assistant']:
+            self.config['assistant']['system_prompt'] = "ты голосовой ассистент,отвечай кратко,ответы озвучиваються"
+
+        if 'auto_start' not in self.config['assistant']:
+            self.config['assistant']['auto_start'] = False
+
         if 'paths' not in self.config:
             self.config['paths'] = {}
 
@@ -27,8 +37,74 @@ class Settings:
 
         if 'music_url' not in self.config['browser']:
             self.config['browser']['music_url'] = "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1"
-    
-            
+
+        if 'context' not in self.config:
+            self.config['context'] = {}
+
+        if 'is_enabled' not in self.config['context']:
+            self.config['context']['is_enabled'] = False
+
+        if 'message' not in self.config['context']:
+            self.config['context']['message'] = []
+
+        if 'max_lenght' not in self.config['context']:
+            self.config['context']['max_lenght'] = 4
+
+        self.save()
+
+
+
+
+
+    def auto_start(self):
+        import win32com.client
+
+        print(f'Сейчас автозапуск {"выключен" if self.config["assistant"]["auto_start"] == False else "включен"}')
+        print(f'Введите 0 если хотите оставить так')
+        choice = input(f'Введите 1 если хотите {"включить" if self.config["assistant"]["auto_start"] == False else "выключить"}')
+        
+
+        auto_path = os.path.join(os.path.expanduser('~'), 'AppData', 'Roaming', 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup', 'Voice_Assistant.lnk')
+        if choice == '1':
+
+            if self.config['assistant']['auto_start'] == False:
+
+                if getattr(sys, 'frozen', False):
+                    exe_path = sys.executable
+                    exe_folder = os.path.dirname(exe_path)
+                    shell = win32com.client.Dispatch("WScript.Shell")
+
+                    lnk = shell.CreateShortcut(auto_path)
+                    lnk.TargetPath = exe_path
+                    lnk.WorkingDirectory = exe_folder
+                    lnk.IconLocation = exe_path
+                    lnk.Save()
+
+                else:
+                    python_exe_path = sys.executable
+                    main = os.path.join(os.path.dirname(__file__), 'main.py')
+                    working_dir = os.path.join(os.path.dirname(__file__), '..')
+                    ico = os.path.join(os.path.dirname(__file__), '..', 'ico.ico')
+
+                    shell = win32com.client.Dispatch("WScript.Shell")
+
+                    lnk = shell.CreateShortcut(auto_path)
+                    lnk.TargetPath = python_exe_path
+                    lnk.WorkingDirectory = working_dir
+                    lnk.Arguments = main
+                    lnk.IconLocation = ico
+                    lnk.Save()
+
+
+            else:
+                if os.path.exists(auto_path):
+                    os.remove(auto_path)
+
+            self.config['assistant']['auto_start'] = not self.config['assistant']['auto_start']
+            print(f'Автозапуск {"включен" if self.config["assistant"]["auto_start"] == True else "выключен"}')
+            time.sleep(1)
+
+
 
 
     def browser_url(self):
@@ -110,6 +186,17 @@ class Settings:
 
 
 
+    def context(self):
+        context = self.config['context']['is_enabled']
+        print(f'Сейчас сохранение контекста {"включено" if context else "выключено"}')
+        print("Введите 0 если не хотите менять")
+        print(f"Введите 1 если хотите {'включить' if not context else 'выключить'}")
+        choice = input()
+        if choice == '1':
+            self.config['context']['is_enabled'] = not self.config['context']['is_enabled']
+
+
+
     def get_api_key(self):
         print('Введите ключ к API GigaChat')
         print('Ключ (0 если не хотите вводить): ', end='')
@@ -132,8 +219,10 @@ class Settings:
         print(' 3. Полная настройка путей и ключа')
         print(' 4. Ввести ссылку на ваш браузер')
         print(' 5. Ввести ссылку на ваш плейлист или видео')
-        print(' 6. Настройка фонового шума')
-        print(' 7. Завершить настройку')
+        print(' 6. Настроить автозапуск')
+        print(' 7. Настройка истории')
+        print(' 8. Настройка фонового шума')
+        print(' 9. Завершить настройку')
         choice = input('Выберите действие: ').strip()
         return choice
 
@@ -145,6 +234,8 @@ class Settings:
         self.get_api_key()
         self.browser_url()
         self.music_url()
+        self.auto_start()
+        self.context()
         self.ambient_noise()
 
 
@@ -181,17 +272,21 @@ class Settings:
                 self.music_url()
             
             elif choice == '6':
-                self.ambient_noise()
+                self.auto_start()
 
             elif choice == '7':
+                self.context()
+
+            elif choice == '8':
+                self.ambient_noise()
+
+            elif choice == '9':
                 os.system('cls')
                 break
         
             else:
                 print("Команда не найдена")
-            
             os.system('cls')
 
         print('Говорите, я слушаю')
-
         self.save()

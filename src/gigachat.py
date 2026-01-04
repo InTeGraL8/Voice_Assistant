@@ -42,6 +42,8 @@ EYVMxjh8zNbFuoc7fzvvrFILLe7ifvEIUqSVIC/AzplM/Jxw7buXFeGP1qVCBEHq
 -----END CERTIFICATE-----'''
 
 
+
+
 def create_temp_cert():
     """Создаёт временный файл с сертификатом и возвращает путь к нему"""
     temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.pem', delete=False)
@@ -52,6 +54,9 @@ def create_temp_cert():
     atexit.register(lambda: os.unlink(temp_file.name))
     
     return temp_file.name
+
+
+
 
 # Создаём файл сертификата один раз при загрузке модуля
 CERT_PATH = create_temp_cert()
@@ -64,13 +69,20 @@ if getattr(sys, 'frozen', False):
 else:
     config_path = os.path.join(os.path.dirname(__file__), '..', 'config.json')
 
+
+
 # Считываем конфиг
-with open(config_path, 'r',  encoding='utf-8') as file:
-    config = json.load(file)
+def r_config():
+    with open(config_path, 'r',  encoding='utf-8') as file:
+        config = json.load(file)
+        return config
+
+
 
 
 # Запрос на получение токена
 def get_token(api_key):
+    config = r_config()
     # Url куда отправлять запрос
     auth_url = config['GigaChat']['auth_url']
 
@@ -107,7 +119,10 @@ def get_token(api_key):
     return token_data.get('access_token', '')
 
 
+
+
 def test_token():
+    config = r_config()
     token = config['GigaChat']['token']
 
     if token != '':
@@ -126,7 +141,10 @@ def test_token():
             return False
 
 
+
+
 def GigaChat_ask(question = None, token = None):
+    config = r_config()
     if question is None or token is None:
         return question, token
 
@@ -139,27 +157,34 @@ def GigaChat_ask(question = None, token = None):
         'Content-Type': 'application/json'
     }
     
+    message = [{"role": "system", "content": sys_prompt}]
+    message.extend(config['context']['message'])
+    message.append({"role": "user", "content": question})
+
     data = {
         "model": config['GigaChat']['gigachat_model'],
-        "messages": [
-            {"role": "system", "content": sys_prompt},
-            {"role": "user", "content": question}
-        ],
+        "messages": message,
         "temperature": config['GigaChat']['temperature'],
         "max_tokens": config['GigaChat']['max_tokens']
     }
-    
+
     response = requests.post(chat_url, headers=headers, json=data, verify=CERT_PATH)
+
+    question, answer = [{"role": "user", "content": question}, {"role": "assistant", "content": parse_gigachat_response(response.text)}]
+    update_context(question, answer)
 
     return response.text
 
 
+
+
 def parse_gigachat_response(response):
+    config = r_config()
     data = json.loads(response)
     try:
         if 'choices' in data and data['choices']:
 
-            config['GigaChat']['all_used_tokens'] = data['usage']['total_tokens']
+            config['GigaChat']['all_used_tokens'] += data['usage']['total_tokens']
             with open(config_path, 'w', encoding='utf-8') as file:
                 json.dump(config, file, ensure_ascii=False, indent=2)
 
@@ -180,6 +205,7 @@ def parse_gigachat_response(response):
 
 
 def processor(prompt = None): 
+    config = r_config()
     # Получение ключа
     api_key = config['GigaChat']['api_key']
     token = config['GigaChat']['token']
@@ -196,3 +222,25 @@ def processor(prompt = None):
 
     answer = GigaChat_ask(prompt, token)
     return parse_gigachat_response(answer)
+
+
+
+
+def update_context(question, answer):
+    config = r_config()
+    if config['context']['is_enabled'] == True:
+        if len(config['context']['message']) >= config['context']['max_lenght'] * 2:
+            del config['context']['message'][0]
+            del config['context']['message'][0]
+
+            config['context']['message'].append(question)
+            config['context']['message'].append(answer)
+
+        else:
+            config['context']['message'].append(question)
+            config['context']['message'].append(answer)
+
+        with open(config_path, 'w', encoding='utf-8') as file:
+            json.dump(config, file, ensure_ascii=True, indent=2)
+    else:
+        return
