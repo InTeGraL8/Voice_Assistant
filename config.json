@@ -24,5 +24,11 @@
     "browser": {
         "browser_url": "https://google.com",
         "music_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1"
+    },
+    "context": {
+        "is_enabled": false,
+        "max_lenght": 4,
+        "message": []
     }
 }
+
