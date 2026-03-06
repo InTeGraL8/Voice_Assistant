@@ -23,7 +23,7 @@
     },
     "browser": {
         "browser_url": "https://google.com",
-        "music_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ&start_radio=1"
+        "music_url": "https://www.youtube.com/watch?v=gINU2c_g0NM"
     },
     "context": {
         "is_enabled": false,
@@ -31,4 +31,5 @@
         "message": []
     }
 }
+
 
