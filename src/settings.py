@@ -288,5 +288,5 @@ class Settings:
                 print("Команда не найдена")
             os.system('cls')
 
-        print('Говорите, я слушаю')
+
         self.save()
